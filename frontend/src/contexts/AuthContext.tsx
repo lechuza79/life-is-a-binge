@@ -1,117 +1,105 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  User as FirebaseUser,
-  updateProfile
-} from 'firebase/auth';
-import { initializeApp } from 'firebase/app';
-
-// Firebase Konfiguration
-const firebaseConfig = {
-  apiKey: "AIzaSyDummyKey-ThisIsAPlaceholder",
-  authDomain: "film-recommendation-app.firebaseapp.com",
-  projectId: "film-recommendation-app",
-  storageBucket: "film-recommendation-app.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890abcdef"
-};
-
-// Firebase initialisieren
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// Typdefinitionen
-interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-}
 
 interface AuthContextType {
   currentUser: User | null;
-  loading: boolean;
-  signUp: (email: string, password: string, displayName: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
-  signOut: () => Promise<void>;
-  updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
-// Kontext erstellen
-const AuthContext = createContext<AuthContextType | null>(null);
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
 
-// Hook für den Zugriff auf den Kontext
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth muss innerhalb eines AuthProviders verwendet werden');
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
 
-// Provider-Komponente
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Firebase-Benutzer in unser Benutzerformat konvertieren
-  const formatUser = (user: FirebaseUser | null): User | null => {
-    if (!user) return null;
-    return {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL
-    };
-  };
-
-  // Registrierung
-  const signUp = async (email: string, password: string, displayName: string) => {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(userCredential.user, { displayName });
-    setCurrentUser(formatUser(userCredential.user));
-  };
-
-  // Anmeldung
-  const signIn = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    setCurrentUser(formatUser(userCredential.user));
-  };
-
-  // Abmeldung
-  const signOut = async () => {
-    await firebaseSignOut(auth);
-    setCurrentUser(null);
-  };
-
-  // Benutzerprofil aktualisieren
-  const updateUserProfile = async (displayName: string, photoURL?: string) => {
-    if (!auth.currentUser) return;
-    await updateProfile(auth.currentUser, { displayName, photoURL: photoURL || null });
-    setCurrentUser(formatUser(auth.currentUser));
-  };
-
-  // Authentifizierungsstatus überwachen
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(formatUser(user));
-      setLoading(false);
-    });
-
-    return unsubscribe;
+    // Simuliere das Laden des Benutzers aus dem lokalen Speicher
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+      setIsAuthenticated(true);
+    }
+    setLoading(false);
   }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      // Simuliere eine API-Anfrage
+      // In einer echten App würde hier eine Anfrage an den Backend-Server gesendet
+      const user: User = {
+        id: '1',
+        name: 'Demo User',
+        email: email
+      };
+      
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(user));
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    try {
+      // Simuliere eine API-Anfrage
+      // In einer echten App würde hier eine Anfrage an den Backend-Server gesendet
+      const user: User = {
+        id: '1',
+        name: name,
+        email: email
+      };
+      
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      localStorage.setItem('user', JSON.stringify(user));
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      // Simuliere eine API-Anfrage
+      // In einer echten App würde hier eine Anfrage an den Backend-Server gesendet
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem('user');
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw error;
+    }
+  };
 
   const value = {
     currentUser,
-    loading,
-    signUp,
-    signIn,
-    signOut,
-    updateUserProfile
+    login,
+    register,
+    logout,
+    isAuthenticated
   };
 
   return (
@@ -120,5 +108,3 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     </AuthContext.Provider>
   );
 };
-
-export default AuthContext;

@@ -1,221 +1,126 @@
-import React, { useState } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
-  TextField, 
-  InputAdornment,
-  Avatar,
-  Badge,
-  Box
-} from '@mui/material';
-import { 
-  Search as SearchIcon, 
-  AccountCircle, 
-  Notifications as NotificationsIcon,
-  Menu as MenuIcon
-} from '@mui/icons-material';
+import React from 'react';
+import { AppBar, Toolbar, Typography, Button, IconButton, Box, Menu, MenuItem } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { currentUser, signOut } = useAuth();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [notificationAnchorEl, setNotificationAnchorEl] = useState<null | HTMLElement>(null);
-  const [mobileMenuAnchorEl, setMobileMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const { currentUser, isAuthenticated, logout } = useAuth();
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [notificationAnchorEl, setNotificationAnchorEl] = React.useState<null | HTMLElement>(null);
 
-  // Dummy-Benachrichtigungen für die Demo
-  const notifications = [
-    { id: 1, message: 'Max hat dir eine neue Empfehlung geschickt', read: false },
-    { id: 2, message: 'Neue Filme in deiner Watchlist verfügbar', read: false },
-    { id: 3, message: 'Deine Bewertung wurde von 5 Personen als hilfreich markiert', read: true }
-  ];
-
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleNotificationMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNotificationMenu = (event: React.MouseEvent<HTMLElement>) => {
     setNotificationAnchorEl(event.currentTarget);
   };
 
-  const handleMobileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMobileMenuAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
+  const handleNotificationClose = () => {
     setNotificationAnchorEl(null);
-    setMobileMenuAnchorEl(null);
   };
 
-  const handleSignOut = async () => {
+  const handleLogout = async () => {
     try {
-      await signOut();
-      handleMenuClose();
+      await logout();
       navigate('/');
     } catch (error) {
-      console.error('Fehler beim Abmelden:', error);
+      console.error('Logout error:', error);
     }
+    handleClose();
   };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
-
-  const unreadNotifications = notifications.filter(n => !n.read).length;
 
   return (
-    <AppBar position="static">
+    <AppBar position="static" sx={{ backgroundColor: '#111' }}>
       <Toolbar>
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          sx={{ mr: 2, display: { sm: 'none' } }}
-          onClick={handleMobileMenuOpen}
-        >
-          <MenuIcon />
-        </IconButton>
-        
         <Typography
           variant="h6"
           component="div"
           sx={{ flexGrow: 0, display: { xs: 'none', sm: 'block' }, cursor: 'pointer' }}
           onClick={() => navigate('/')}
         >
-          FilmFinder
+          Life is a Binge
         </Typography>
-
-        <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-          <form onSubmit={handleSearch} style={{ width: '100%', maxWidth: '500px' }}>
-            <TextField
-              placeholder="Filme, Serien oder 'Worauf hättest du Lust?'"
-              variant="outlined"
-              size="small"
-              fullWidth
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon />
-                  </InputAdornment>
-                ),
-                sx: { 
-                  bgcolor: 'background.paper',
-                  borderRadius: 1
-                }
-              }}
-            />
-          </form>
-        </Box>
-
-        <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-          <Button color="inherit" onClick={() => navigate('/movies')}>Filme</Button>
-          <Button color="inherit" onClick={() => navigate('/tv')}>Serien</Button>
-          <Button color="inherit" onClick={() => navigate('/documentaries')}>Dokus</Button>
-          
-          {currentUser ? (
-            <>
-              <Button color="inherit" onClick={() => navigate('/watchlist')}>Watchlist</Button>
-              
-              <IconButton color="inherit" onClick={handleNotificationMenuOpen}>
-                <Badge badgeContent={unreadNotifications} color="error">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-              
-              <IconButton
-                edge="end"
-                aria-label="account of current user"
-                aria-haspopup="true"
-                onClick={handleProfileMenuOpen}
-                color="inherit"
-              >
-                {currentUser.photoURL ? (
-                  <Avatar src={currentUser.photoURL} alt={currentUser.displayName || ''} sx={{ width: 32, height: 32 }} />
-                ) : (
-                  <AccountCircle />
-                )}
-              </IconButton>
-            </>
-          ) : (
-            <>
-              <Button color="inherit" onClick={() => navigate('/login')}>Anmelden</Button>
-              <Button color="inherit" onClick={() => navigate('/register')}>Registrieren</Button>
-            </>
-          )}
-        </Box>
-      </Toolbar>
-
-      {/* Profil-Menü */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>Profil</MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/settings'); }}>Einstellungen</MenuItem>
-        <MenuItem onClick={handleSignOut}>Abmelden</MenuItem>
-      </Menu>
-
-      {/* Benachrichtigungsmenü */}
-      <Menu
-        anchorEl={notificationAnchorEl}
-        open={Boolean(notificationAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        {notifications.length > 0 ? (
-          notifications.map(notification => (
-            <MenuItem 
-              key={notification.id} 
-              onClick={handleMenuClose}
-              sx={{ 
-                fontWeight: notification.read ? 'normal' : 'bold',
-                maxWidth: 300
-              }}
-            >
-              {notification.message}
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem onClick={handleMenuClose}>Keine neuen Benachrichtigungen</MenuItem>
-        )}
-      </Menu>
-
-      {/* Mobiles Menü */}
-      <Menu
-        anchorEl={mobileMenuAnchorEl}
-        open={Boolean(mobileMenuAnchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/movies'); }}>Filme</MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/tv'); }}>Serien</MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate('/documentaries'); }}>Dokus</MenuItem>
         
-        {currentUser ? (
+        <Box sx={{ flexGrow: 1 }} />
+        
+        {isAuthenticated ? (
           <>
-            <MenuItem onClick={() => { handleMenuClose(); navigate('/watchlist'); }}>Watchlist</MenuItem>
-            <MenuItem onClick={() => { handleMenuClose(); navigate('/profile'); }}>Profil</MenuItem>
-            <MenuItem onClick={handleSignOut}>Abmelden</MenuItem>
+            <Button color="inherit" onClick={() => navigate('/')}>Empfehlungen</Button>
+            <Button color="inherit" onClick={() => navigate('/watchlist')}>Watchlist</Button>
+            <Button color="inherit" onClick={() => navigate('/social')}>Social</Button>
+            
+            <IconButton
+              size="large"
+              color="inherit"
+              onClick={handleNotificationMenu}
+            >
+              <NotificationsIcon />
+            </IconButton>
+            <Menu
+              id="notification-menu"
+              anchorEl={notificationAnchorEl}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(notificationAnchorEl)}
+              onClose={handleNotificationClose}
+            >
+              <MenuItem onClick={handleNotificationClose}>Neue Empfehlung: "The Matrix"</MenuItem>
+              <MenuItem onClick={handleNotificationClose}>Max hat "Inception" geteilt</MenuItem>
+              <MenuItem onClick={handleNotificationClose}>Lisa folgt dir jetzt</MenuItem>
+            </Menu>
+            
+            <IconButton
+              size="large"
+              aria-label="account of current user"
+              aria-controls="menu-appbar"
+              aria-haspopup="true"
+              onClick={handleMenu}
+              color="inherit"
+            >
+              <AccountCircleIcon />
+            </IconButton>
+            <Menu
+              id="menu-appbar"
+              anchorEl={anchorEl}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              keepMounted
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              open={Boolean(anchorEl)}
+              onClose={handleClose}
+            >
+              <MenuItem disabled>{currentUser?.name}</MenuItem>
+              <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            </Menu>
           </>
         ) : (
           <>
-            <MenuItem onClick={() => { handleMenuClose(); navigate('/login'); }}>Anmelden</MenuItem>
-            <MenuItem onClick={() => { handleMenuClose(); navigate('/register'); }}>Registrieren</MenuItem>
+            <Button color="inherit" onClick={() => navigate('/')}>Empfehlungen</Button>
+            <Button color="inherit" onClick={() => navigate('/login')}>Login</Button>
+            <Button color="inherit" onClick={() => navigate('/register')}>Registrieren</Button>
           </>
         )}
-      </Menu>
+      </Toolbar>
     </AppBar>
   );
 };

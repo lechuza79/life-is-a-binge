@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 // Dynamische API-URL basierend auf der Umgebung
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3002' 
-  : `https://${window.location.hostname.replace('3000', '3002')}`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (window.location.hostname === 'localhost' 
+    ? 'http://localhost:3002' 
+    : `https://${window.location.hostname.replace('3000', '3002')}`);
 
 // API-Client für Backend-Anfragen
 const apiClient = axios.create({
