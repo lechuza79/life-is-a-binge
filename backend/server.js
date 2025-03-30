@@ -24,7 +24,16 @@ try {
 }
 
 // Middleware
-app.use(cors());
+// CORS-Konfiguration
+app.use(cors({
+  origin: [
+    'https://astounding-platypus-3ebe41.netlify.app', // Produktions-Frontend auf Netlify
+    'http://localhost:3000'                           // Lokales Frontend für Entwicklung
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}) );
+
 app.use(express.json());
 
 // Hilfsfunktion für TMDB API-Anfragen
