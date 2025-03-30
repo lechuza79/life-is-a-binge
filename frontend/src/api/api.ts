@@ -1,10 +1,9 @@
 import axios from 'axios';
 
 // Dynamische API-URL basierend auf der Umgebung
-const API_BASE_URL = process.env.REACT_APP_API_URL || 
-  (window.location.hostname === 'localhost' 
-    ? 'http://localhost:3002' 
-    : `https://${window.location.hostname.replace('3000', '3002')}`);
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://life-is-a-binge-backend.onrender.com'  // Produktions-URL auf Render
+  : 'http://localhost:3002';                        // Entwicklungs-URL
 
 // API-Client für Backend-Anfragen
 const apiClient = axios.create({
@@ -12,7 +11,8 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-});
+}) ;
+
 
 // Typdefinitionen
 export interface Movie {
